@@ -1,3 +1,5 @@
+import { useState, type FormEvent } from "react";
+
 const OPEN_ORDERS = [
   { id: "ORD-1345", side: "BUY", qty: 12, price: "123.40", status: "Open" },
   { id: "ORD-1346", side: "SELL", qty: 8, price: "98.20", status: "Partial" },
@@ -11,6 +13,49 @@ const TRADE_TAPE = [
 ];
 
 export function OrdersScreen() {
+  const [side, setSide] = useState<"BUY" | "SELL">("BUY");
+  const [price, setPrice] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const numericPrice = parseFloat(price);
+    const numericQuantity = parseInt(quantity, 10);
+
+    if (Number.isNaN(numericPrice) || Number.isNaN(numericQuantity)) {
+      setStatusMessage("Enter a valid price and quantity before submitting.");
+      return;
+    }
+
+    const payload = {
+      side,
+      price: numericPrice,
+      quantity: numericQuantity,
+    };
+
+    try {
+      await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      setStatusMessage(
+        `Order submitted: ${payload.side} ${payload.quantity} @ ${payload.price.toFixed(
+          2,
+        )}`,
+      );
+    } catch (error) {
+      console.log("Submitting Tulip order (mock)", payload, error);
+      setStatusMessage(
+        `Order ready: ${payload.side} ${payload.quantity} @ ${payload.price.toFixed(
+          2,
+        )} (mocked)`,
+      );
+    }
+  };
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr] h-full">
       <section className="rounded-panel bg-cream text-navy-900 shadow-card p-6 space-y-6">
@@ -23,19 +68,25 @@ export function OrdersScreen() {
           </p>
         </header>
 
-        <form className="grid gap-4 rounded-3xl border border-slate-500/30 bg-white/80 px-5 py-5">
+        <form
+          className="grid gap-4 rounded-3xl border border-slate-500/30 bg-white/80 px-5 py-5"
+          onSubmit={handleSubmit}
+        >
           <div className="flex gap-3">
-            {["BUY", "SELL"].map((side) => (
+            {(["BUY", "SELL"] as const).map((option) => (
               <button
-                key={side}
-                className={`flex-1 rounded-2xl px-4 py-3 font-display text-lg uppercase tracking-wide transition ${
-                  side === "BUY"
-                    ? "bg-tulip-green text-cream shadow-card"
-                    : "bg-tulip-red text-cream shadow-card"
-                }`}
+                key={option}
                 type="button"
+                onClick={() => setSide(option)}
+                className={`flex-1 rounded-2xl px-4 py-3 font-display text-lg uppercase tracking-wide transition ${
+                  side === option
+                    ? option === "BUY"
+                      ? "bg-tulip-green text-cream shadow-card"
+                      : "bg-tulip-red text-cream shadow-card"
+                    : "bg-navy-900/10 text-navy-800 border border-transparent"
+                }`}
               >
-                {side}
+                {option}
               </button>
             ))}
           </div>
@@ -44,6 +95,9 @@ export function OrdersScreen() {
             <input
               className="rounded-2xl border border-slate-500/40 bg-cream px-4 py-3 text-2xl font-semibold text-navy-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-navy-700"
               placeholder="123.45"
+              value={price}
+              onChange={(event) => setPrice(event.target.value)}
+              inputMode="decimal"
             />
           </label>
           <label className="grid gap-2 text-sm font-medium text-slate-700 uppercase tracking-wide">
@@ -51,10 +105,13 @@ export function OrdersScreen() {
             <input
               className="rounded-2xl border border-slate-500/40 bg-cream px-4 py-3 text-2xl font-semibold text-navy-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-navy-700"
               placeholder="10"
+              value={quantity}
+              onChange={(event) => setQuantity(event.target.value)}
+              inputMode="numeric"
             />
           </label>
           <button
-            type="button"
+            type="submit"
             className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-navy-900 px-5 py-3 text-cream font-semibold uppercase tracking-widest shadow-card"
           >
             <span role="img" aria-label="tulip">
@@ -63,6 +120,11 @@ export function OrdersScreen() {
             Submit Order
           </button>
         </form>
+        {statusMessage && (
+          <p className="text-xs uppercase tracking-widest text-slate-600">
+            {statusMessage}
+          </p>
+        )}
 
         <div className="space-y-3">
           <h3 className="font-display text-lg uppercase tracking-wide">
