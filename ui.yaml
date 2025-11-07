@@ -61,7 +61,6 @@ Resources:
           AcmCertificateArn: arn:aws:acm:us-east-1:106343380616:certificate/38c64a3b-cf8d-467e-a7a9-6d642de9da41
           SslSupportMethod: sni-only
           MinimumProtocolVersion: TLSv1.2_2021
-          CloudFrontDefaultCertificate: false
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
