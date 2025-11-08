@@ -18,6 +18,14 @@ if [ ! -d node_modules ]; then
   echo "   - Installing dependencies (npm install)"
   npm install >/dev/null
 fi
+
+# Stamp build with UTC timestamp if not already provided
+if [ -z "${VITE_UI_BUILD_TIME:-}" ]; then
+  export VITE_UI_BUILD_TIME
+  VITE_UI_BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  echo "   - VITE_UI_BUILD_TIME=${VITE_UI_BUILD_TIME}"
+fi
+
 npm run build
 
 if [ ! -d dist ]; then

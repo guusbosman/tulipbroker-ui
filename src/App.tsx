@@ -45,6 +45,50 @@ const SCREENS: Record<
   },
 };
 
+const relativeFormatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+const easternFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York",
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+const RELATIVE_DIVISIONS: Array<{ amount: number; unit: Intl.RelativeTimeFormatUnit }> = [
+  { amount: 60, unit: "second" },
+  { amount: 60, unit: "minute" },
+  { amount: 24, unit: "hour" },
+  { amount: 7, unit: "day" },
+  { amount: 4.34524, unit: "week" },
+  { amount: 12, unit: "month" },
+  { amount: Number.POSITIVE_INFINITY, unit: "year" },
+];
+
+function formatRelativeTimestamp(timestamp?: string) {
+  if (!timestamp) {
+    return { label: "UI · local build", title: undefined };
+  }
+
+  const parsed = Date.parse(timestamp);
+  if (Number.isNaN(parsed)) {
+    return { label: `UI · build ${timestamp}`, title: timestamp };
+  }
+
+  let duration = (parsed - Date.now()) / 1000;
+  for (const division of RELATIVE_DIVISIONS) {
+    if (Math.abs(duration) < division.amount) {
+      const relative = relativeFormatter.format(Math.round(duration), division.unit);
+      return {
+        label: `UI · build ${relative}`,
+        title: easternFormatter.format(new Date(parsed)),
+      };
+    }
+    duration /= division.amount;
+  }
+
+  return {
+    label: `UI · build ${new Date(parsed).toISOString()}`,
+    title: easternFormatter.format(new Date(parsed)),
+  };
+}
+
 function App() {
   const [activeScreen, setActiveScreen] = useState<ScreenKey>("overview");
   const {
@@ -52,6 +96,10 @@ function App() {
     status: apiStatus,
     error: apiError,
   } = useApiConfig();
+  const uiBuildTime =
+    import.meta.env.VITE_UI_BUILD_TIME ??
+    (import.meta.env.DEV ? new Date().toISOString() : undefined);
+  const uiBuildBadge = formatRelativeTimestamp(uiBuildTime);
 
   const ActiveView = useMemo(() => SCREENS[activeScreen].render, [activeScreen]);
 
@@ -134,9 +182,16 @@ function App() {
               );
             })}
           </div>
-          <div className="mt-5 flex justify-center">
+          <div className="mt-5 flex flex-col items-center gap-3">
             <span className={apiBadgeClasses} aria-live="polite">
               {apiBadgeText}
+            </span>
+            <span
+              className="rounded-full border border-cream/25 px-4 py-2 text-xs uppercase tracking-[0.35em] text-cream/80"
+              aria-live="polite"
+              title={uiBuildBadge.title}
+            >
+              {uiBuildBadge.label}
             </span>
           </div>
         </nav>

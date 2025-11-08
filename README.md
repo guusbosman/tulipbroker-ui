@@ -101,6 +101,7 @@ When building locally, the following environment variables can be set in a `.env
 |-----------|----------|-------------|
 | `VITE_API_URL` | `https://abc123.execute-api.us-east-2.amazonaws.com` | Backend API base URL |
 | `VITE_APP_VERSION` | `0.1.0` | UI version displayed in footer |
+| `VITE_UI_BUILD_TIME` | `2024-02-10T19:45:00Z` | Optional UTC stamp injected at build; auto-set by `scripts/deploy.sh` |
 | `VITE_ENV` | `qa` | Environment identifier (qa, prod, etc.) |
 
 Example `.env.qa` file:
@@ -108,6 +109,7 @@ Example `.env.qa` file:
 ```
 VITE_API_URL=https://abc123.execute-api.us-east-2.amazonaws.com
 VITE_APP_VERSION=0.1.0
+VITE_UI_BUILD_TIME=2024-02-10T19:45:00Z
 VITE_ENV=qa
 ```
 
