@@ -1,6 +1,6 @@
 # 🌷 TulipBroker UI
 
-**TulipBroker UI** is the front-end of the PaperBroker / TulipBroker system — a simulated stock trading and resiliency-testing environment.  
+**TulipBroker UI** is the front-end of the TulipBroker system — a simulated stock trading and resiliency-testing environment.  
 It’s a lightweight **React + Vite** web application designed for modern, low-latency deployment on **AWS S3 + CloudFront**.
 
 ---
