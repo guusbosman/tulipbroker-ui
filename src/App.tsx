@@ -117,6 +117,13 @@ function App() {
     apiStatus === "ready" && apiConfig?.buildTime
       ? buildBadge("API", apiConfig.buildTime, "API · build unknown")
       : null;
+  const formatBadgeText = (badge: { label: string }) =>
+    badge.label.replace(" · built", " build:");
+  const combinedBadgeText =
+    apiBuildBadge && uiBuildBadge
+      ? `${formatBadgeText(apiBuildBadge)} // ${formatBadgeText(uiBuildBadge)}`
+      : formatBadgeText(apiBuildBadge ?? uiBuildBadge);
+  const combinedBadgeTitle = [apiBuildBadge?.title, uiBuildBadge.title].filter(Boolean).join(" | ") || undefined;
 
   const ActiveView = useMemo(() => SCREENS[activeScreen].render, [activeScreen]);
 
@@ -204,18 +211,11 @@ function App() {
               {apiBadgeText}
             </span>
             <span
-              className="rounded-full border border-cream/25 px-4 py-2 text-xs uppercase tracking-[0.35em] text-cream/80"
+              className="rounded-full border border-cream/25 px-4 py-2 text-[0.65rem] uppercase tracking-[0.25em] text-cream/80 text-center"
               aria-live="polite"
-              title={apiBuildBadge?.title}
+              title={combinedBadgeTitle}
             >
-              {apiBuildBadge?.label ?? "API · build unknown"}
-            </span>
-            <span
-              className="rounded-full border border-cream/25 px-4 py-2 text-xs uppercase tracking-[0.35em] text-cream/80"
-              aria-live="polite"
-              title={uiBuildBadge.title}
-            >
-              {uiBuildBadge.label}
+              {combinedBadgeText}
             </span>
           </div>
         </nav>
