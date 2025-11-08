@@ -61,14 +61,16 @@ const RELATIVE_DIVISIONS: Array<{ amount: number; unit: Intl.RelativeTimeFormatU
   { amount: Number.POSITIVE_INFINITY, unit: "year" },
 ];
 
-function formatRelativeTimestamp(timestamp?: string) {
+type RelativeTimestamp = { relative: string; title?: string };
+
+function formatRelativeTimestamp(timestamp?: string): RelativeTimestamp | null {
   if (!timestamp) {
-    return { label: "UI · local build", title: undefined };
+    return null;
   }
 
   const parsed = Date.parse(timestamp);
   if (Number.isNaN(parsed)) {
-    return { label: `UI · build ${timestamp}`, title: timestamp };
+    return { relative: timestamp };
   }
 
   let duration = (parsed - Date.now()) / 1000;
@@ -76,7 +78,7 @@ function formatRelativeTimestamp(timestamp?: string) {
     if (Math.abs(duration) < division.amount) {
       const relative = relativeFormatter.format(Math.round(duration), division.unit);
       return {
-        label: `UI · build ${relative}`,
+        relative,
         title: easternFormatter.format(new Date(parsed)),
       };
     }
@@ -84,8 +86,19 @@ function formatRelativeTimestamp(timestamp?: string) {
   }
 
   return {
-    label: `UI · build ${new Date(parsed).toISOString()}`,
+    relative: new Date(parsed).toISOString(),
     title: easternFormatter.format(new Date(parsed)),
+  };
+}
+
+function buildBadge(prefix: string, timestamp?: string, fallback?: string) {
+  const formatted = formatRelativeTimestamp(timestamp);
+  if (!formatted) {
+    return { label: fallback ?? `${prefix} · local build`, title: undefined };
+  }
+  return {
+    label: `${prefix} · built ${formatted.relative}`,
+    title: formatted.title,
   };
 }
 
@@ -99,7 +112,11 @@ function App() {
   const uiBuildTime =
     import.meta.env.VITE_UI_BUILD_TIME ??
     (import.meta.env.DEV ? new Date().toISOString() : undefined);
-  const uiBuildBadge = formatRelativeTimestamp(uiBuildTime);
+  const uiBuildBadge = buildBadge("UI", uiBuildTime, "UI · local build");
+  const apiBuildBadge =
+    apiStatus === "ready" && apiConfig?.buildTime
+      ? buildBadge("API", apiConfig.buildTime, "API · build unknown")
+      : null;
 
   const ActiveView = useMemo(() => SCREENS[activeScreen].render, [activeScreen]);
 
@@ -185,6 +202,13 @@ function App() {
           <div className="mt-5 flex flex-col items-center gap-3">
             <span className={apiBadgeClasses} aria-live="polite">
               {apiBadgeText}
+            </span>
+            <span
+              className="rounded-full border border-cream/25 px-4 py-2 text-xs uppercase tracking-[0.35em] text-cream/80"
+              aria-live="polite"
+              title={apiBuildBadge?.title}
+            >
+              {apiBuildBadge?.label ?? "API · build unknown"}
             </span>
             <span
               className="rounded-full border border-cream/25 px-4 py-2 text-xs uppercase tracking-[0.35em] text-cream/80"
