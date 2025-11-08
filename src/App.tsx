@@ -5,6 +5,7 @@ import { PortfolioScreen } from "./screens/PortfolioScreen";
 import { OrdersScreen } from "./screens/OrdersScreen";
 import { MarketDetailScreen } from "./screens/MarketDetailScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
+import { useApiConfig } from "./hooks/useApiConfig";
 
 type ScreenKey =
   | "overview"
@@ -46,8 +47,28 @@ const SCREENS: Record<
 
 function App() {
   const [activeScreen, setActiveScreen] = useState<ScreenKey>("overview");
+  const {
+    config: apiConfig,
+    status: apiStatus,
+    error: apiError,
+  } = useApiConfig();
 
   const ActiveView = useMemo(() => SCREENS[activeScreen].render, [activeScreen]);
+
+  const baseBadgeClasses =
+    "rounded-full border px-4 py-2 text-xs uppercase tracking-[0.35em] transition";
+  let apiBadgeClasses = `${baseBadgeClasses} border-cream/40 bg-navy-900/40 text-cream/70`;
+  let apiBadgeText = "API · checking…";
+
+  if (apiStatus === "ready" && apiConfig) {
+    apiBadgeClasses = `${baseBadgeClasses} border-cream bg-cream text-navy-800 shadow-card`;
+    apiBadgeText = `API · ${apiConfig.env ?? "env"} · ${apiConfig.region ?? "region"} · v${
+      apiConfig.version ?? "-"
+    }`;
+  } else if (apiStatus === "error") {
+    apiBadgeClasses = `${baseBadgeClasses} border-tulip-red/70 bg-tulip-red/30 text-cream`;
+    apiBadgeText = `API · unreachable${apiError ? ` · ${apiError}` : ""}`;
+  }
 
   return (
     <div className="min-h-screen w-full px-4 py-10 md:px-10">
@@ -112,6 +133,11 @@ function App() {
                 </button>
               );
             })}
+          </div>
+          <div className="mt-5 flex justify-center">
+            <span className={apiBadgeClasses} aria-live="polite">
+              {apiBadgeText}
+            </span>
           </div>
         </nav>
       </div>
