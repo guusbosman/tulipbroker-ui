@@ -1,88 +1,28 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: PaperBroker UI (S3 + CloudFront + OAC) - compatibility template
+Description: TulipBroker UI runtime stack (excludes one-time CloudFront/S3 foundation)
 
 Parameters:
-  Project:
+  AssetBucketName:
     Type: String
-    Default: paperbroker-ui
-  Env:
+    Default: paperbroker-ui-qa-assets
+    Description: Pre-created asset bucket (from foundation stack)
+  DistributionId:
     Type: String
-    Default: qa
+    Default: ""
+    Description: CloudFront distribution ID (from foundation stack)
+  DistributionDomain:
+    Type: String
+    Default: tulips-qa.guusbosman.com
+    Description: CloudFront domain or custom alias
 
 Resources:
-  SiteBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub '${Project}-${Env}-assets'
-      # Buckets are private by default; no public ACLs/policies will be added.
-
-  OriginAccessControl:
-    Type: AWS::CloudFront::OriginAccessControl
-    Properties:
-      OriginAccessControlConfig:
-        Name: !Sub '${Project}-${Env}-oac'
-        Description: !Sub 'OAC for ${Project}-${Env}'
-        OriginAccessControlOriginType: s3
-        SigningBehavior: always
-        SigningProtocol: sigv4
-
-  Distribution:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Enabled: true
-        Comment: !Sub '${Project}-${Env}'
-        DefaultRootObject: index.html
-        Origins:
-          - Id: !Sub 's3-${SiteBucket}'
-            DomainName: !GetAtt SiteBucket.RegionalDomainName
-            S3OriginConfig: {}                 # placeholder when using OAC
-            OriginAccessControlId: !GetAtt OriginAccessControl.Id
-        DefaultCacheBehavior:
-          TargetOriginId: !Sub 's3-${SiteBucket}'
-          ViewerProtocolPolicy: redirect-to-https
-          AllowedMethods: [GET, HEAD, OPTIONS]
-          CachedMethods: [GET, HEAD]
-          Compress: true
-          ForwardedValues:
-            QueryString: false
-            Cookies: { Forward: none }
-        CustomErrorResponses:
-          - ErrorCode: 403
-            ResponseCode: 200
-            ResponsePagePath: /index.html
-          - ErrorCode: 404
-            ResponseCode: 200
-            ResponsePagePath: /index.html
-        PriceClass: PriceClass_100
-        Aliases: 
-          - tulips-qa.guusbosman.com
-        ViewerCertificate:
-          AcmCertificateArn: arn:aws:acm:us-east-1:106343380616:certificate/38c64a3b-cf8d-467e-a7a9-6d642de9da41
-          SslSupportMethod: sni-only
-          MinimumProtocolVersion: TLSv1.2_2021
-
-  BucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref SiteBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          # Only allow CloudFront (this distribution) to read objects
-          - Sid: AllowCloudFrontRead
-            Effect: Allow
-            Principal: { Service: cloudfront.amazonaws.com }
-            Action: ['s3:GetObject']
-            Resource: !Sub '${SiteBucket.Arn}/*'
-            Condition:
-              StringEquals:
-                AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}'
+  # Add repeatable / phase-specific resources here (Lambda, APIs, etc.)
+  # Foundation resources such as CloudFront, S3 assets, and certificates live in ui-foundation.yaml
 
 Outputs:
-  BucketName:
-    Value: !Ref SiteBucket
-  CloudFrontDomain:
-    Value: !GetAtt Distribution.DomainName
+  AssetBucketName:
+    Value: !Ref AssetBucketName
   DistributionId:
-    Value: !Ref Distribution
+    Value: !Ref DistributionId
+  DistributionDomain:
+    Value: !Ref DistributionDomain
