@@ -1,18 +1,66 @@
+import {
+  Area,
+  AreaChart,
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { TulipIcon } from "../components/TulipIcon";
+import { useMarketPulse } from "../hooks/useMarketPulse";
 
-const TICKERS = [
-  { symbol: "TLIP", price: 124, change: "+3.4%" },
-  { symbol: "BLOM", price: 98, change: "-1.8%" },
-  { symbol: "STEM", price: 142, change: "+5.6%" },
+const TOOLTIP_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York",
+  hour: "2-digit",
+  minute: "2-digit",
+  month: "short",
+  day: "numeric",
+});
+
+const DEFAULT_POINTS = [
+  { ts: "2025-11-09T02:00:00Z", avgPrice: 120, buyOrders: 4, sellOrders: 1 },
+  { ts: "2025-11-09T02:05:00Z", avgPrice: 124, buyOrders: 6, sellOrders: 2 },
+  { ts: "2025-11-09T02:10:00Z", avgPrice: 122, buyOrders: 3, sellOrders: 3 },
+  { ts: "2025-11-09T02:15:00Z", avgPrice: 128, buyOrders: 5, sellOrders: 1 },
+  { ts: "2025-11-09T02:20:00Z", avgPrice: 134, buyOrders: 7, sellOrders: 2 },
 ];
 
-const CALLOUTS = [
-  { title: "Best performer today", body: "TLIP up 5.6% · Volume trending green" },
-  { title: "Market sentiment", body: "Optimistic · 68% buy orders this hour" },
-  { title: "Your top holding", body: "Tulip Growth Fund · 42% of portfolio" },
-];
+const FALLBACK_STATS = {
+  lastPrice: 134,
+  buyShare: 0.7,
+  sellShare: 0.3,
+  ordersSampled: 25,
+};
 
 export function OverviewScreen() {
+  const { points, stats, status, error, sentiment, refresh } = useMarketPulse();
+  const chartData = (points.length ? points : DEFAULT_POINTS).map((point, idx) => ({
+    ...point,
+    label: TOOLTIP_FORMATTER.format(new Date(point.ts)),
+    markerVariant: idx % 2 === 0 ? "green" : "red",
+  }));
+  const resolvedStats = stats ?? FALLBACK_STATS;
+  const tickerCards = [
+    {
+      label: "Last price",
+      value: `$${resolvedStats.lastPrice?.toFixed(2) ?? "--"}`,
+      sub: "Tulip synthetic index",
+    },
+    {
+      label: "Buy share",
+      value: `${Math.round((resolvedStats.buyShare ?? 0) * 100)}%`,
+      sub: "Sentiment · buys / total",
+    },
+    {
+      label: "Sample size",
+      value: resolvedStats.ordersSampled ?? 0,
+      sub: "Orders in rolling window",
+    },
+  ];
+
   return (
     <div className="grid gap-6 lg:grid-cols-[2fr,1fr] h-full">
       <section className="bg-cream text-navy-900 rounded-panel shadow-card p-6 flex flex-col">
@@ -22,7 +70,8 @@ export function OverviewScreen() {
               Tulip Market Pulse
             </h2>
             <p className="text-sm text-slate-700">
-              Live tulip derivative index · Updated moments ago
+              Live tulip derivative index ·{" "}
+              {status === "ready" ? "Updated moments ago" : "Syncing…"}
             </p>
           </div>
           <div className="h-16 w-16 rounded-full bg-navy-900/5 flex items-center justify-center">
@@ -31,66 +80,118 @@ export function OverviewScreen() {
         </header>
         <div className="mt-6 flex-1 rounded-2xl border border-slate-500/40 bg-[linear-gradient(90deg,rgba(19,51,90,0.1)_1px,transparent_1px),linear-gradient(0deg,rgba(19,51,90,0.1)_1px,transparent_1px)] bg-[length:36px_36px] p-6 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
-            <svg viewBox="0 0 400 220" className="h-full w-full">
-              <polyline
-                fill="none"
-                stroke="#1c4a78"
-                strokeWidth="10"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                points="12,190 78,160 120,174 180,120 236,156 292,96 348,60"
-                className="opacity-60"
-              />
-              <polyline
-                fill="none"
-                stroke="#5bc489"
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                points="12,180 80,150 140,132 200,100 260,130 320,70 380,40"
-              />
-              <g>
-                {[
-                  { x: 60, y: 150 },
-                  { x: 120, y: 120 },
-                  { x: 180, y: 106 },
-                  { x: 240, y: 80 },
-                  { x: 300, y: 96 },
-                  { x: 360, y: 60 },
-                ].map((point, idx) => (
-                  <g
-                    key={`${point.x}-${point.y}`}
-                    transform={`translate(${point.x - 24}, ${point.y - 24})`}
-                  >
-                    <TulipIcon
-                      className="h-12 w-12"
-                      variant={idx % 2 === 0 ? "red" : "green"}
-                    />
-                  </g>
-                ))}
-              </g>
-            </svg>
+            <ResponsiveContainer>
+              <ComposedChart data={chartData}>
+                <defs>
+                  <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#5bc489" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#5bc489" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="rgba(12,34,63,0.15)" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 10 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  yAxisId="price"
+                  tick={{ fontSize: 10 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  yAxisId="volume"
+                  orientation="right"
+                  tick={{ fontSize: 10 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  labelFormatter={(label) => label}
+                  formatter={(value, name) => [
+                    typeof value === "number" ? value.toFixed(2) : value,
+                    name,
+                  ]}
+                  contentStyle={{
+                    background: "#0d223f",
+                    border: "none",
+                    borderRadius: "12px",
+                    color: "#f6f1e4",
+                  }}
+                />
+                <Bar
+                  yAxisId="volume"
+                  dataKey="buyOrders"
+                  fill="rgba(91,196,137,0.4)"
+                  barSize={10}
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  yAxisId="volume"
+                  dataKey="sellOrders"
+                  fill="rgba(255,107,107,0.3)"
+                  barSize={10}
+                  radius={[4, 4, 0, 0]}
+                />
+                <Area
+                  yAxisId="price"
+                  type="monotone"
+                  dataKey="avgPrice"
+                  stroke="#1c4a78"
+                  strokeWidth={3}
+                  fill="url(#priceGradient)"
+                  dot={({ cx, cy, payload }) =>
+                    cx && cy ? (
+                      <g transform={`translate(${cx - 12}, ${cy - 12})`}>
+                        <TulipIcon
+                          className="h-6 w-6"
+                          variant={payload.buyOrders >= payload.sellOrders ? "green" : "red"}
+                        />
+                      </g>
+                    ) : null
+                  }
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
           </div>
           <div className="relative grid gap-4 text-sm text-slate-700">
             <div className="inline-flex items-center gap-2 rounded-full bg-navy-900/10 px-4 py-1 font-medium w-max uppercase tracking-wider text-xs text-navy-800">
-              Tulip stocks rally
+              {sentiment !== null ? `Buy sentiment · ${sentiment}%` : "Market pulse"}
             </div>
-            <p className="max-w-md leading-relaxed">
-              Growth tulips hitting seasonal highs. Watching liquidity across
-              the tulip futures desk and matching engine health.
-            </p>
+            {error ? (
+              <p className="text-tulip-red text-sm uppercase tracking-[0.3em]">
+                {error}
+              </p>
+            ) : (
+              <p className="max-w-md leading-relaxed">
+                Watching liquidity across the Tulip futures desk and matching engine
+                health in real time.{" "}
+                <button
+                  type="button"
+                  className="text-navy-800 underline-offset-2 underline"
+                  onClick={refresh}
+                >
+                  Refresh
+                </button>
+              </p>
+            )}
           </div>
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          {CALLOUTS.map((card) => (
+          {tickerCards.map((card) => (
             <article
-              key={card.title}
+              key={card.label}
               className="rounded-3xl bg-navy-900/10 p-4 border border-slate-500/30"
             >
               <h3 className="font-display text-sm uppercase tracking-wider text-navy-800">
-                {card.title}
+                {card.label}
               </h3>
-              <p className="mt-2 text-sm text-slate-700">{card.body}</p>
+              <p className="mt-2 text-2xl font-display">{card.value}</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-600">
+                {card.sub}
+              </p>
             </article>
           ))}
         </div>
@@ -101,33 +202,39 @@ export function OverviewScreen() {
           <h3 className="font-display text-lg uppercase tracking-wide">
             Watchlist
           </h3>
-          <ul className="mt-5 space-y-4">
-            {TICKERS.map((ticker) => (
-              <li
-                key={ticker.symbol}
-                className="flex items-center justify-between rounded-2xl bg-navy-900/60 px-4 py-3"
-              >
-                <div>
-                  <p className="font-display text-base tracking-wide">
-                    {ticker.symbol}
-                  </p>
-                  <p className="text-xs text-cream/70">Spot · Tulip Exchange</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-display text-xl">${ticker.price}</p>
-                  <p
-                    className={`text-sm font-medium ${
-                      ticker.change.startsWith("-")
-                        ? "text-tulip-red"
-                        : "text-tulip-green"
-                    }`}
-                  >
-                    {ticker.change}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-5 space-y-4">
+            <div className="flex items-center justify-between rounded-2xl bg-navy-900/60 px-4 py-3">
+              <div>
+                <p className="text-xs text-cream/70 uppercase tracking-[0.4em]">
+                  Sentiment
+                </p>
+                <p className="font-display text-xl">
+                  {sentiment !== null ? `${sentiment}% BUY` : "--"}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-cream/70 uppercase tracking-[0.4em]">
+                  Orders
+                </p>
+                <p className="font-display text-xl">
+                  {resolvedStats.ordersSampled ?? "--"}
+                </p>
+              </div>
+            </div>
+            <div className="rounded-2xl bg-navy-900/60 px-4 py-3">
+              <p className="text-xs text-cream/70 uppercase tracking-[0.4em] mb-2">
+                Market health
+              </p>
+              <div className="flex items-center justify-between text-sm">
+                <span>Matching Engine</span>
+                <span className="text-tulip-green font-semibold">Healthy</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-2">
+                <span>Latency p95</span>
+                <span className="text-accent-yellow font-semibold">218ms</span>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="rounded-panel bg-navy-800 text-cream shadow-card border border-navy-700 px-5 py-6 space-y-4">
           <h3 className="font-display text-lg uppercase tracking-wide">
