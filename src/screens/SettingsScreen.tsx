@@ -1,6 +1,34 @@
 import { TulipIcon } from "../components/TulipIcon";
+import { useApiConfig } from "../hooks/useApiConfig";
 
 export function SettingsScreen() {
+  const { config: apiConfig, status: apiStatus, error: apiError } = useApiConfig();
+  const uiBuildTime =
+    import.meta.env.VITE_UI_BUILD_TIME ??
+    (import.meta.env.DEV ? new Date().toISOString() : undefined);
+
+  const easternFormatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
+  const formatEst = (timestamp?: string) => {
+    if (!timestamp) return "—";
+    const parsed = Date.parse(timestamp);
+    if (Number.isNaN(parsed)) return timestamp;
+    return easternFormatter.format(new Date(parsed));
+  };
+
+  const configRows = [
+    { label: "Environment", value: apiConfig?.env ?? "—" },
+    { label: "Region", value: apiConfig?.region ?? "—" },
+    { label: "Version", value: apiConfig?.version ?? "—" },
+    { label: "Commit", value: apiConfig?.commit ?? "—" },
+    { label: "API Build", value: formatEst(apiConfig?.buildTime) },
+    { label: "UI Build", value: formatEst(uiBuildTime) },
+  ];
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr] h-full">
       <section className="rounded-panel bg-cream text-navy-900 shadow-card p-6 space-y-6">
@@ -96,6 +124,49 @@ export function SettingsScreen() {
             </article>
           ))}
         </section>
+
+        <section className="rounded-3xl border border-slate-500/30 bg-white/70 px-5 py-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-display text-lg uppercase tracking-wide">
+              Backend signals
+            </h3>
+            <span
+              className={`text-xs uppercase tracking-[0.3em] ${
+                apiStatus === "ready"
+                  ? "text-tulip-green"
+                  : apiStatus === "loading"
+                  ? "text-accent-yellow"
+                  : "text-tulip-red"
+              }`}
+            >
+              {apiStatus === "ready"
+                ? "Healthy"
+                : apiStatus === "loading"
+                ? "Checking…"
+                : "Unavailable"}
+            </span>
+          </div>
+          {apiError && (
+            <p className="text-xs uppercase tracking-[0.3em] text-tulip-red">
+              {apiError}
+            </p>
+          )}
+          <div className="grid gap-2 text-sm text-slate-700">
+            {configRows.map((row) => (
+              <div
+                key={row.label}
+                className="flex items-center justify-between rounded-2xl bg-white/60 px-4 py-2"
+              >
+                <span className="uppercase tracking-[0.25em] text-xs text-slate-500">
+                  {row.label}
+                </span>
+                <span className="font-semibold text-navy-900">
+                  {row.value || "—"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
       </section>
 
       <aside className="space-y-4">
@@ -130,18 +201,6 @@ export function SettingsScreen() {
           </div>
         </section>
 
-        <section className="rounded-panel bg-cream text-navy-900 shadow-card p-6 space-y-3">
-          <h3 className="font-display text-lg uppercase tracking-wide">
-            Chat prompt
-          </h3>
-          <p className="text-sm text-slate-700 leading-relaxed">
-            Use the “Tulip-Style UI” prompt to generate illustration-ready
-            layouts for design explorations and onboarding content.
-          </p>
-          <div className="rounded-3xl border border-slate-500/30 bg-white/70 px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-600">
-            TulipBroker Tulip-Style UI — Full Screen Set
-          </div>
-        </section>
       </aside>
     </div>
   );

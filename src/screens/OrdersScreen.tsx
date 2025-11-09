@@ -1,22 +1,68 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
-const OPEN_ORDERS = [
-  { id: "ORD-1345", side: "BUY", qty: 12, price: "123.40", status: "Open" },
-  { id: "ORD-1346", side: "SELL", qty: 8, price: "98.20", status: "Partial" },
-  { id: "ORD-1347", side: "BUY", qty: 5, price: "140.00", status: "Filled" },
-];
+type Order = {
+  orderId: string;
+  side: "BUY" | "SELL";
+  price: number;
+  quantity: number;
+  status?: string;
+  acceptedAt?: string;
+  timeInForce?: string;
+  region?: string;
+  acceptedAz?: string;
+};
 
-const TRADE_TAPE = [
-  { time: "12:45:06", side: "BUY", qty: 5, price: "123.40" },
-  { time: "12:43:18", side: "SELL", qty: 10, price: "98.20" },
-  { time: "12:41:52", side: "BUY", qty: 3, price: "140.00" },
-];
+const API_BASE =
+  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+const DEFAULT_CLIENT_ID = import.meta.env.VITE_CLIENT_ID ?? "demo-ui";
+
+const orderEndpoint = API_BASE ? `${API_BASE}/api/orders` : "/api/orders";
+
+const createIdempotencyKey = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+const estFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York",
+  dateStyle: "short",
+  timeStyle: "short",
+});
+
+const formatEst = (timestamp?: string) => {
+  if (!timestamp) return "—";
+  const parsed = Date.parse(timestamp);
+  if (Number.isNaN(parsed)) return timestamp;
+  return estFormatter.format(new Date(parsed));
+};
 
 export function OrdersScreen() {
   const [side, setSide] = useState<"BUY" | "SELL">("BUY");
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+
+  const loadOrders = async () => {
+    try {
+      setLoadingOrders(true);
+      setOrdersError(null);
+      const response = await fetch(`${orderEndpoint}?limit=20`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const data = await response.json();
+      setOrders(Array.isArray(data?.items) ? data.items : []);
+    } catch (error) {
+      console.error("Failed to load orders", error);
+      setOrdersError("Unable to load latest orders");
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -29,32 +75,55 @@ export function OrdersScreen() {
       return;
     }
 
-    const payload = {
-      side,
-      price: numericPrice,
-      quantity: numericQuantity,
-    };
-
     try {
-      await fetch("/api/orders", {
+      setSubmitting(true);
+      setStatusMessage("Submitting order…");
+      const payload = {
+        clientId: DEFAULT_CLIENT_ID,
+        idempotencyKey: createIdempotencyKey(),
+        side,
+        price: numericPrice,
+        quantity: numericQuantity,
+        timeInForce: "GTC",
+      };
+
+      const response = await fetch(orderEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error ??
+            `Order submit failed (${response.status} ${response.statusText})`,
+        );
+      }
+
       setStatusMessage(
-        `Order submitted: ${payload.side} ${payload.quantity} @ ${payload.price.toFixed(
+        `Order accepted (#${data?.orderId ?? "pending"}) — ${payload.side} ${payload.quantity} @ ${payload.price.toFixed(
           2,
         )}`,
       );
+      setPrice("");
+      setQuantity("");
+      loadOrders();
     } catch (error) {
-      console.log("Submitting Tulip order (mock)", payload, error);
+      console.error("Submitting Tulip order failed", error);
       setStatusMessage(
-        `Order ready: ${payload.side} ${payload.quantity} @ ${payload.price.toFixed(
-          2,
-        )} (mocked)`,
+        error instanceof Error
+          ? `Order failed: ${error.message}`
+          : "Order failed: unexpected error",
       );
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr] h-full">
@@ -112,12 +181,13 @@ export function OrdersScreen() {
           </label>
           <button
             type="submit"
-            className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-navy-900 px-5 py-3 text-cream font-semibold uppercase tracking-widest shadow-card"
+            className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-navy-900 px-5 py-3 text-cream font-semibold uppercase tracking-widest shadow-card disabled:opacity-60"
+            disabled={submitting}
           >
             <span role="img" aria-label="tulip">
               🌷
             </span>
-            Submit Order
+            {submitting ? "Submitting…" : "Submit Order"}
           </button>
         </form>
         {statusMessage && (
@@ -127,42 +197,73 @@ export function OrdersScreen() {
         )}
 
         <div className="space-y-3">
-          <h3 className="font-display text-lg uppercase tracking-wide">
-            Open orders
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-display text-lg uppercase tracking-wide">
+              Recent orders
+            </h3>
+            <button
+              type="button"
+              onClick={loadOrders}
+              className="text-xs uppercase tracking-[0.3em] text-navy-800 hover:underline disabled:opacity-50"
+              disabled={loadingOrders}
+            >
+              Refresh
+            </button>
+          </div>
           <div className="overflow-hidden rounded-3xl border border-slate-500/30 bg-white/90">
-            <div className="grid grid-cols-[1.2fr_repeat(4,minmax(0,1fr))] gap-2 bg-navy-900/10 px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-600">
-              <span>Order Id</span>
-              <span>Side</span>
+            <div className="grid grid-cols-[1.4fr_repeat(4,minmax(0,1fr))] gap-2 bg-navy-900/10 px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-600">
+              <span>Captured</span>
+              <span className="text-center">Side</span>
               <span>Qty</span>
               <span>Price</span>
               <span>Status</span>
             </div>
             <div className="divide-y divide-slate-500/30 text-sm">
-              {OPEN_ORDERS.map((order) => (
-                <div
-                  key={order.id}
-                  className="grid grid-cols-[1.2fr_repeat(4,minmax(0,1fr))] gap-2 px-4 py-3 items-center"
-                >
-                  <span className="font-semibold">{order.id}</span>
-                  <span
-                    className={`font-semibold ${
-                      order.side === "BUY" ? "text-tulip-green" : "text-tulip-red"
-                    }`}
-                  >
-                    {order.side}
-                  </span>
-                  <span>{order.qty}</span>
-                  <span>${order.price}</span>
-                  <span className="flex items-center gap-2">
-                    <span>{order.status}</span>
-                    {order.status === "Open" && (
-                      <span className="inline-flex h-2 w-2 rounded-full bg-tulip-green" />
-                    )}
-                    {order.status === "Partial" && (
-                      <span className="inline-flex h-2 w-2 rounded-full bg-accent-yellow" />
-                    )}
-                  </span>
+              {loadingOrders && (
+                <div className="px-4 py-4 text-center text-slate-500">
+                  Loading orders…
+                </div>
+              )}
+              {ordersError && (
+                <div className="px-4 py-4 text-center text-tulip-red">
+                  {ordersError}
+                </div>
+              )}
+              {!loadingOrders && !ordersError && orders.length === 0 && (
+                <div className="px-4 py-4 text-center text-slate-500">
+                  No orders yet
+                </div>
+              )}
+              {orders.map((order) => (
+                <div key={order.orderId} className="px-4 py-3">
+                  <div className="grid grid-cols-[1.4fr_repeat(4,minmax(0,1fr))] gap-2 items-center">
+                    <span
+                      className="font-semibold whitespace-nowrap"
+                      title={order.acceptedAt ?? ""}
+                    >
+                      {formatEst(order.acceptedAt)}
+                    </span>
+                    <span
+                    className={`font-semibold text-center ${
+                        order.side === "BUY" ? "text-tulip-green" : "text-tulip-red"
+                      }`}
+                    >
+                      {order.side}
+                    </span>
+                    <span>{order.quantity}</span>
+                    <span>${order.price.toFixed(2)}</span>
+                    <span className="flex items-center gap-2">
+                      <span>{order.status ?? "ACCEPTED"}</span>
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-500">
+                    <span title={order.orderId} className="truncate max-w-[60%]">
+                      ID: {order.orderId.split("-")[0]}
+                    </span>
+                    <span title={`${order.region ?? "?"}/${order.acceptedAz ?? "?"}`}>
+                      {`Region ${order.region ?? "?"} · AZ ${order.acceptedAz ?? "?"}`}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -175,48 +276,10 @@ export function OrdersScreen() {
           <h3 className="font-display text-lg uppercase tracking-wide">
             Trade tape
           </h3>
-          <div className="max-h-72 overflow-y-auto space-y-3 pr-1">
-            {TRADE_TAPE.map((trade) => (
-              <article
-                key={`${trade.time}-${trade.side}-${trade.qty}`}
-                className="rounded-2xl bg-navy-900/60 px-4 py-3 flex items-center justify-between"
-              >
-                <div>
-                  <p className="text-xs text-cream/60 uppercase tracking-widest">
-                    {trade.time}
-                  </p>
-                  <p className="font-semibold">
-                    {trade.side} {trade.qty} @ {trade.price}
-                  </p>
-                </div>
-                <span
-                  className={`h-3 w-3 rounded-full ${
-                    trade.side === "BUY" ? "bg-tulip-green" : "bg-tulip-red"
-                  }`}
-                />
-              </article>
-            ))}
-          </div>
-        </section>
-        <section className="rounded-panel bg-cream text-navy-900 border border-slate-500/30 shadow-card p-6 space-y-3">
-          <h3 className="font-display text-lg uppercase tracking-wide">
-            Alerts
-          </h3>
-          {[
-            { label: "Order accepted", tone: "green" },
-            { label: "Partial fill · monitoring", tone: "yellow" },
-          ].map((alert) => (
-            <div
-              key={alert.label}
-              className={`rounded-2xl px-4 py-3 text-sm font-semibold uppercase tracking-widest ${
-                alert.tone === "green"
-                  ? "bg-tulip-green text-cream"
-                  : "bg-accent-yellow text-navy-900"
-              }`}
-            >
-              {alert.label}
-            </div>
-          ))}
+          <p className="text-sm text-cream/70">
+            Phase 1 uses simulated fills; trade tape will appear once fills are
+            emitted by the simulator.
+          </p>
         </section>
       </aside>
     </div>
