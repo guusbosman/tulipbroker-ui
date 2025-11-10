@@ -1,9 +1,12 @@
+import type { CSSProperties } from "react";
+
 type TulipIconProps = {
   className?: string;
+  style?: CSSProperties;
   variant?: "red" | "green";
 };
 
-export function TulipIcon({ className, variant = "red" }: TulipIconProps) {
+export function TulipIcon({ className, style, variant = "red" }: TulipIconProps) {
   const petalColor = variant === "red" ? "#e85a5a" : "#4aa677";
   return (
     <svg
@@ -11,6 +14,7 @@ export function TulipIcon({ className, variant = "red" }: TulipIconProps) {
       role="img"
       aria-hidden="true"
       className={className}
+      style={style}
     >
       <g fill="none" stroke="none">
         <path

@@ -26,8 +26,8 @@ export default {
         },
       },
       fontFamily: {
-        display: ["\"DM Sans\"", "sans-serif"],
-        body: ["\"Work Sans\"", "sans-serif"],
+        display: ['"League Spartan"', "sans-serif"],
+        body: ['"Work Sans"', "sans-serif"],
       },
       boxShadow: {
         frame: "0 12px 24px rgba(6, 21, 37, 0.3)",

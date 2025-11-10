@@ -143,23 +143,23 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen w-full px-4 py-10 md:px-10">
-      <div className="mx-auto flex w-full max-w-6xl flex-col rounded-frame border-8 border-navy-800 bg-navy-900 text-cream shadow-frame">
-        <header className="flex flex-col gap-6 border-b-4 border-navy-700 bg-navy-800 px-8 py-6 md:flex-row md:items-center md:justify-between">
+    <div className="min-h-screen w-full px-3 py-8 sm:px-4 md:px-10">
+      <div className="mx-auto flex w-full max-w-6xl flex-col rounded-[32px] bg-navy-900 text-cream shadow-[0_25px_80px_rgba(1,7,20,0.6)]">
+        <header className="flex flex-col gap-5 border-b border-navy-700/40 bg-navy-800 px-6 py-5 sm:px-8 sm:py-6 md:flex-row md:items-center md:justify-between">
           <button
             type="button"
             onClick={() => setActiveScreen("overview")}
             aria-label="Go to overview"
             className="flex items-center gap-4 text-left hover:opacity-90 transition"
           >
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cream">
-              <TulipIcon className="h-12 w-12" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-cream sm:h-16 sm:w-16">
+              <TulipIcon className="h-10 w-10 sm:h-12 sm:w-12" />
             </div>
             <div>
-              <p className="font-display text-3xl uppercase tracking-[0.4em]">
+              <p className="font-display text-2xl uppercase tracking-[0.2em] sm:text-3xl sm:tracking-[0.4em]">
                 TulipBroker
               </p>
-              <p className="text-sm uppercase tracking-[0.35em] text-cream/70">
+              <p className="text-xs uppercase tracking-[0.2em] text-cream/70 sm:text-sm sm:tracking-[0.35em]">
                 Tulip exchange simulator
               </p>
             </div>
