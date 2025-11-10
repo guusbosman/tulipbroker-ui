@@ -4,7 +4,7 @@ type TulipIconProps = {
 };
 
 export function TulipIcon({ className, variant = "red" }: TulipIconProps) {
-  const petalColor = variant === "red" ? "#ff6b6b" : "#5bc489";
+  const petalColor = variant === "red" ? "#e85a5a" : "#4aa677";
   return (
     <svg
       viewBox="0 0 64 64"

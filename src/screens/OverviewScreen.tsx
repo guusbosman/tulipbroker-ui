@@ -1,6 +1,5 @@
 import {
   Area,
-  AreaChart,
   Bar,
   CartesianGrid,
   ComposedChart,
@@ -34,6 +33,13 @@ const FALLBACK_STATS = {
   sellShare: 0.3,
   ordersSampled: 25,
 };
+
+const HERO_TULIPS = [
+  { left: "12%", scale: 1, variant: "red" as const },
+  { left: "38%", scale: 1.2, variant: "green" as const },
+  { left: "64%", scale: 1.1, variant: "red" as const },
+  { left: "84%", scale: 0.95, variant: "green" as const },
+];
 
 export function OverviewScreen() {
   const { points, stats, status, error, sentiment, refresh } = useMarketPulse();
@@ -78,10 +84,20 @@ export function OverviewScreen() {
             <TulipIcon className="h-12 w-12" />
           </div>
         </header>
-        <div className="mt-6 flex-1 rounded-2xl border border-slate-500/40 bg-[linear-gradient(90deg,rgba(19,51,90,0.1)_1px,transparent_1px),linear-gradient(0deg,rgba(19,51,90,0.1)_1px,transparent_1px)] bg-[length:36px_36px] p-6 relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none">
-            <ResponsiveContainer>
-              <ComposedChart data={chartData}>
+        <div className="mt-6 flex-1 space-y-4">
+          <div className="flex-1 rounded-2xl border border-slate-500/40 bg-[linear-gradient(90deg,rgba(19,51,90,0.1)_1px,transparent_1px),linear-gradient(0deg,rgba(19,51,90,0.1)_1px,transparent_1px)] bg-[length:36px_36px] p-6 relative overflow-hidden min-h-[260px]">
+            <button
+              type="button"
+              onClick={refresh}
+              title="Refresh market pulse"
+              aria-label="Refresh market pulse"
+              className="absolute right-4 top-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-navy-800 shadow-card transition hover:bg-white"
+            >
+              ↻
+            </button>
+            <div className="absolute inset-0 pointer-events-none">
+              <ResponsiveContainer>
+                <ComposedChart data={chartData}>
                 <defs>
                   <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#5bc489" stopOpacity={0.4} />
@@ -139,45 +155,34 @@ export function OverviewScreen() {
                   yAxisId="price"
                   type="monotone"
                   dataKey="avgPrice"
-                  stroke="#1c4a78"
+                  stroke="#3cb39f"
                   strokeWidth={3}
                   fill="url(#priceGradient)"
-                  dot={({ cx, cy, payload }) =>
-                    cx && cy ? (
-                      <g transform={`translate(${cx - 12}, ${cy - 12})`}>
-                        <TulipIcon
-                          className="h-6 w-6"
-                          variant={payload.buyOrders >= payload.sellOrders ? "green" : "red"}
-                        />
-                      </g>
-                    ) : null
-                  }
                 />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="relative grid gap-4 text-sm text-slate-700">
-            <div className="inline-flex items-center gap-2 rounded-full bg-navy-900/10 px-4 py-1 font-medium w-max uppercase tracking-wider text-xs text-navy-800">
-              {sentiment !== null ? `Buy sentiment · ${sentiment}%` : "Market pulse"}
+                </ComposedChart>
+              </ResponsiveContainer>
             </div>
-            {error ? (
-              <p className="text-tulip-red text-sm uppercase tracking-[0.3em]">
-                {error}
-              </p>
-            ) : (
-              <p className="max-w-md leading-relaxed">
-                Watching liquidity across the Tulip futures desk and matching engine
-                health in real time.{" "}
-                <button
-                  type="button"
-                  className="text-navy-800 underline-offset-2 underline"
-                  onClick={refresh}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24">
+              {HERO_TULIPS.map((tulip) => (
+                <div
+                  key={tulip.left}
+                  className="absolute"
+                  style={{ left: tulip.left, transform: `translate(-50%, 10px)` }}
                 >
-                  Refresh
-                </button>
-              </p>
-            )}
+                  <TulipIcon
+                    className="h-16 w-16 drop-shadow-[0_3px_6px_rgba(12,34,63,0.25)]"
+                    style={{ transform: `scale(${tulip.scale})` }}
+                    variant={tulip.variant}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
+          {error ? (
+            <p className="text-tulip-red text-sm uppercase tracking-[0.3em]">
+              {error}
+            </p>
+          ) : null}
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {tickerCards.map((card) => (
