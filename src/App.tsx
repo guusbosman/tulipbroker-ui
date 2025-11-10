@@ -146,7 +146,12 @@ function App() {
     <div className="min-h-screen w-full px-4 py-10 md:px-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col rounded-frame border-8 border-navy-800 bg-navy-900 text-cream shadow-frame">
         <header className="flex flex-col gap-6 border-b-4 border-navy-700 bg-navy-800 px-8 py-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setActiveScreen("overview")}
+            aria-label="Go to overview"
+            className="flex items-center gap-4 text-left hover:opacity-90 transition"
+          >
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cream">
               <TulipIcon className="h-12 w-12" />
             </div>
@@ -158,18 +163,7 @@ function App() {
                 Tulip exchange simulator
               </p>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.35em] text-cream/70">
-            <span className="rounded-full border border-cream/20 px-3 py-1">
-              {SCREENS[activeScreen].label}
-            </span>
-            <span className="rounded-full border border-cream/20 px-3 py-1">
-              {SCREENS[activeScreen].subtitle}
-            </span>
-            <span className="rounded-full border border-cream/20 px-3 py-1">
-              Matching engine · Healthy
-            </span>
-          </div>
+          </button>
         </header>
 
         <main className="flex-1 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 px-6 py-6 md:px-10">
