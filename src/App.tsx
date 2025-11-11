@@ -174,43 +174,45 @@ function App() {
           </div>
         </main>
 
-        <nav className="border-t-4 border-navy-700 bg-navy-800 px-6 py-4">
-          <div className="flex flex-wrap items-center justify-evenly gap-2">
-            {(Object.keys(SCREENS) as ScreenKey[]).map((key) => {
-              const screen = SCREENS[key];
-              const isActive = key === activeScreen;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setActiveScreen(key)}
-                  className={`flex w-full max-w-[150px] flex-col items-center rounded-2xl border px-4 py-3 text-center transition md:flex-1 ${
-                    isActive
-                      ? "border-cream bg-cream text-navy-800 shadow-card"
-                      : "border-transparent bg-navy-900/40 text-cream/70 hover:border-cream/30 hover:text-cream"
-                  }`}
-                >
-                  <span className="font-display text-sm uppercase tracking-widest">
-                    {screen.label}
-                  </span>
-                  <span className="mt-1 text-[0.6rem] uppercase tracking-[0.3em]">
-                    {screen.subtitle}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-5 flex flex-col items-center gap-3">
-            <span className={apiBadgeClasses} aria-live="polite">
-              {apiBadgeText}
-            </span>
-            <span
-              className="rounded-full border border-cream/25 px-4 py-2 text-[0.65rem] uppercase tracking-[0.25em] text-cream/80 text-center"
-              aria-live="polite"
-              title={combinedBadgeTitle}
-            >
-              {combinedBadgeText}
-            </span>
+        <nav className="border-t-4 border-navy-700 bg-navy-800 px-4 py-4 sm:px-6">
+          <div className="flex flex-col gap-4">
+            <div className="-mx-2 flex gap-3 overflow-x-auto px-2 pb-1 sm:-mx-4 sm:px-4 md:flex-wrap md:justify-center">
+              {(Object.keys(SCREENS) as ScreenKey[]).map((key) => {
+                const screen = SCREENS[key];
+                const isActive = key === activeScreen;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setActiveScreen(key)}
+                    className={`flex min-w-[160px] flex-shrink-0 flex-col items-center rounded-2xl border px-4 py-3 text-center transition md:min-w-[140px] md:flex-1 ${
+                      isActive
+                        ? "border-cream bg-cream text-navy-800 shadow-card"
+                        : "border-transparent bg-navy-900/40 text-cream/70 hover:border-cream/30 hover:text-cream"
+                    }`}
+                  >
+                    <span className="font-display text-sm uppercase tracking-widest">
+                      {screen.label}
+                    </span>
+                    <span className="mt-1 text-[0.6rem] uppercase tracking-[0.3em]">
+                      {screen.subtitle}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex flex-col items-center gap-3 text-center md:flex-row md:items-stretch md:justify-between">
+              <span className={`${apiBadgeClasses} w-full md:w-auto`} aria-live="polite">
+                {apiBadgeText}
+              </span>
+              <span
+                className="w-full rounded-full border border-cream/25 px-4 py-2 text-[0.65rem] uppercase tracking-[0.25em] text-cream/80 md:w-auto"
+                aria-live="polite"
+                title={combinedBadgeTitle}
+              >
+                {combinedBadgeText}
+              </span>
+            </div>
           </div>
         </nav>
       </div>
