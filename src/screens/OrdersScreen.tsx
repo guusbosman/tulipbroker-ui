@@ -10,6 +10,7 @@ type Order = {
   timeInForce?: string;
   region?: string;
   acceptedAz?: string;
+  processingMs?: number;
 };
 
 const API_BASE =
@@ -29,11 +30,30 @@ const estFormatter = new Intl.DateTimeFormat("en-US", {
   timeStyle: "short",
 });
 
+const msFormatter = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 0,
+});
+
+const secondsFormatter = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
 const formatEst = (timestamp?: string) => {
   if (!timestamp) return "—";
   const parsed = Date.parse(timestamp);
   if (Number.isNaN(parsed)) return timestamp;
   return estFormatter.format(new Date(parsed));
+};
+
+const formatProcessingDuration = (value?: number) => {
+  if (value == null || Number.isNaN(value)) {
+    return "N/A";
+  }
+  if (value >= 1500) {
+    return `${secondsFormatter.format(value / 1000)} s`;
+  }
+  return `${msFormatter.format(Math.round(value))} ms`;
 };
 
 export function OrdersScreen() {
@@ -244,7 +264,7 @@ export function OrdersScreen() {
                       {formatEst(order.acceptedAt)}
                     </span>
                     <span
-                    className={`font-semibold text-center ${
+                      className={`font-semibold text-center ${
                         order.side === "BUY" ? "text-tulip-green" : "text-tulip-red"
                       }`}
                     >
@@ -260,8 +280,11 @@ export function OrdersScreen() {
                     <span title={order.orderId} className="truncate max-w-[60%]">
                       ID: {order.orderId.split("-")[0]}
                     </span>
-                    <span title={`${order.region ?? "?"}/${order.acceptedAz ?? "?"}`}>
-                      {`Region ${order.region ?? "?"} · AZ ${order.acceptedAz ?? "?"}`}
+                    <span className="hidden sm:inline" title={`Region ${order.region ?? "?"}`}>
+                      Region {order.region ?? "?"}
+                    </span>
+                    <span className="font-semibold text-navy-800 tracking-[0.15em]" title="Order processing duration">
+                      Proc {formatProcessingDuration(order.processingMs)}
                     </span>
                   </div>
                 </div>
