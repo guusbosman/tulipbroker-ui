@@ -232,9 +232,9 @@ function App() {
 
   return (
     <>
-      <div className="min-h-screen w-full px-2 py-2 sm:px-4 sm:py-6 md:px-10">
+      <div className="min-h-screen w-full px-3 py-6 sm:px-4 md:px-10">
         <div className="mx-auto flex w-full max-w-6xl flex-col rounded-[32px] bg-navy-900 text-cream shadow-[0_25px_80px_rgba(1,7,20,0.6)]">
-          <header className="flex flex-col gap-4 border-b border-navy-700/40 bg-navy-800 px-4 py-3 sm:gap-5 sm:px-8 sm:py-6">
+          <header className="flex flex-col gap-5 border-b border-navy-700/40 bg-navy-800 px-6 py-5 sm:px-8 sm:py-6">
             <div className="flex items-center justify-between gap-3">
               <button
                 type="button"
@@ -279,12 +279,14 @@ function App() {
             </div>
           </header>
 
-          <main className="flex-1 bg-navy-900 px-3 py-3 sm:px-8 sm:py-6 md:px-10">
-            <div className="rounded-[26px] bg-navy-900/70 p-3 shadow-[0_14px_45px_rgba(1,7,20,0.55)] sm:p-6 md:p-8">
-              <ActiveView />
+          <main className="flex-1 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 px-6 py-6 md:px-10">
+            <div className="rounded-panel border border-navy-800/60 bg-navy-900/60 p-1 shadow-inner">
+              <div className="rounded-[26px] bg-gradient-to-br from-navy-900 via-navy-900 to-slate-950 p-6 md:p-8">
+                <ActiveView />
+              </div>
             </div>
           </main>
-          <footer className="border-t border-navy-700 bg-navy-800 px-4 py-4 text-center sm:px-8">
+          <footer className="border-t border-navy-700 bg-navy-800 px-6 py-5 text-center sm:px-8">
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
               <span className={`${apiBadgeClasses} w-full sm:w-auto`} aria-live="polite">
                 {apiBadgeText}
