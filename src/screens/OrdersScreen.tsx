@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { usePersona } from "../PersonaContext";
 
 type Order = {
   orderId: string;
@@ -57,6 +58,7 @@ const formatProcessingDuration = (value?: number) => {
 };
 
 export function OrdersScreen() {
+  const { activePersona } = usePersona();
   const [side, setSide] = useState<"BUY" | "SELL">("BUY");
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -101,6 +103,7 @@ export function OrdersScreen() {
       const payload = {
         clientId: DEFAULT_CLIENT_ID,
         idempotencyKey: createIdempotencyKey(),
+        userId: activePersona.userId,
         side,
         price: numericPrice,
         quantity: numericQuantity,

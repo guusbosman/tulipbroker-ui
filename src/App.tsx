@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TulipIcon } from "./components/TulipIcon";
+import { PersonaDropdown } from "./components/PersonaDropdown";
 import { OverviewScreen } from "./screens/OverviewScreen";
 import { PortfolioScreen } from "./screens/PortfolioScreen";
 import { OrdersScreen } from "./screens/OrdersScreen";
@@ -310,7 +311,9 @@ function App() {
                   </p>
                 </div>
               </button>
-              <div className="hidden min-w-[3rem] sm:block" aria-hidden="true" />
+              <div className="flex min-w-[13rem] justify-end">
+                <PersonaDropdown variant="header" />
+              </div>
             </div>
           </header>
 
