@@ -160,6 +160,7 @@ export function OrdersScreen() {
         <form
           className="grid gap-4 rounded-3xl border border-slate-500/30 bg-white/80 px-5 py-5"
           onSubmit={handleSubmit}
+          id="order-entry-form"
         >
           <div className="flex gap-3">
             {(["BUY", "SELL"] as const).map((option) => (
@@ -187,6 +188,7 @@ export function OrdersScreen() {
               value={price}
               onChange={(event) => setPrice(event.target.value)}
               inputMode="decimal"
+              data-order-price-input
             />
           </label>
           <label className="grid gap-2 text-sm font-medium text-slate-700 uppercase tracking-wide">
