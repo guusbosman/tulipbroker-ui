@@ -317,11 +317,9 @@ function App() {
             </div>
           </header>
 
-          <main className="flex-1 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 px-6 py-6 md:px-10">
-            <div className="rounded-panel border border-navy-800/60 bg-navy-900/60 p-1 shadow-inner">
-              <div className="rounded-[26px] bg-gradient-to-br from-navy-900 via-navy-900 to-slate-950 p-6 md:p-8">
-                <ActiveView />
-              </div>
+          <main className="flex-1 bg-gradient-to-br from-navy-900 via-navy-850 to-navy-900 px-1.5 py-3 sm:px-6 md:px-10">
+            <div className="rounded-[32px] border border-navy-800/60 bg-gradient-to-br from-navy-900 via-navy-900 to-slate-950 p-3 shadow-inner sm:p-6 md:p-8">
+              <ActiveView />
             </div>
           </main>
           <footer className="border-t border-navy-700 bg-navy-800 px-6 py-5 text-center sm:px-8">

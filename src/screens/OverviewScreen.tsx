@@ -76,7 +76,7 @@ export function OverviewScreen() {
               Tulip Market Pulse
             </h2>
             <p className="text-sm text-slate-700">
-              Live tulip derivative index ·{" "}
+              Live tulip market ·{" "}
               {status === "ready" ? "Updated moments ago" : "Syncing…"}
             </p>
           </div>
