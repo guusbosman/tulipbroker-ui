@@ -4,25 +4,25 @@ const HOLDINGS = [
   {
     name: "Tulip Growth",
     symbol: "TLIP",
-    price: "$124.20",
+    price: "ƒ124.20",
     qty: "120",
-    value: "$14,904",
+    value: "ƒ14,904",
     change: "+4.2%",
   },
   {
     name: "Bloom Futures",
     symbol: "BLOM",
-    price: "$98.10",
+    price: "ƒ98.10",
     qty: "60",
-    value: "$5,886",
+    value: "ƒ5,886",
     change: "-1.5%",
   },
   {
     name: "Stem Labs",
     symbol: "STEM",
-    price: "$142.00",
+    price: "ƒ142.00",
     qty: "40",
-    value: "$5,680",
+    value: "ƒ5,680",
     change: "+6.7%",
   },
 ];
@@ -41,7 +41,7 @@ export function PortfolioScreen() {
             </p>
           </div>
           <div className="rounded-full bg-navy-900/10 px-4 py-2 text-sm font-medium text-navy-800 flex items-center gap-2 uppercase tracking-wider">
-            Total value <span className="text-2xl font-display">$28,470</span>
+            Total value <span className="text-2xl font-display">ƒ28,470</span>
           </div>
         </header>
 

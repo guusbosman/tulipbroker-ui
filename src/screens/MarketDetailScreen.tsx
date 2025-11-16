@@ -59,7 +59,7 @@ export function MarketDetailScreen() {
 
         <div className="grid gap-4 md:grid-cols-3 text-sm">
           {[
-            { label: "Last price", value: "$124.20", tone: "green" },
+            { label: "Last price", value: "ƒ124.20", tone: "green" },
             { label: "24h change", value: "+4.2%", tone: "green" },
             { label: "Volume", value: "12.8k lots", tone: "neutral" },
           ].map((metric) => (
@@ -93,10 +93,10 @@ export function MarketDetailScreen() {
           </h3>
           <div className="grid gap-3 text-sm">
             {[
-              { side: "Bid", level: "$123.90", size: "24", width: "70%" },
-              { side: "Bid", level: "$123.70", size: "18", width: "50%" },
-              { side: "Ask", level: "$124.40", size: "20", width: "60%" },
-              { side: "Ask", level: "$124.70", size: "16", width: "40%" },
+              { side: "Bid", level: "ƒ123.90", size: "24", width: "70%" },
+              { side: "Bid", level: "ƒ123.70", size: "18", width: "50%" },
+              { side: "Ask", level: "ƒ124.40", size: "20", width: "60%" },
+              { side: "Ask", level: "ƒ124.70", size: "16", width: "40%" },
             ].map((row, idx) => (
               <div key={idx} className="grid gap-2">
                 <div className="flex items-center justify-between text-xs uppercase tracking-widest text-cream/70">

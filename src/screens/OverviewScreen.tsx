@@ -85,7 +85,7 @@ export function OverviewScreen() {
           </div>
         </header>
         <div className="mt-6 flex-1 space-y-4">
-          <div className="flex-1 rounded-2xl border border-slate-500/40 bg-[linear-gradient(90deg,rgba(19,51,90,0.1)_1px,transparent_1px),linear-gradient(0deg,rgba(19,51,90,0.1)_1px,transparent_1px)] bg-[length:36px_36px] p-6 relative overflow-hidden min-h-[260px]">
+          <div className="rounded-2xl border border-slate-500/40 bg-[linear-gradient(90deg,rgba(19,51,90,0.1)_1px,transparent_1px),linear-gradient(0deg,rgba(19,51,90,0.1)_1px,transparent_1px)] bg-[length:36px_36px] px-0 py-4 sm:py-6 relative overflow-hidden min-h-[260px]">
             <button
               type="button"
               onClick={refresh}
@@ -97,7 +97,7 @@ export function OverviewScreen() {
             </button>
             <div className="absolute inset-0 pointer-events-none">
               <ResponsiveContainer>
-                <ComposedChart data={chartData}>
+                <ComposedChart data={chartData} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
                 <defs>
                   <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#5bc489" stopOpacity={0.4} />
