@@ -1,4 +1,4 @@
-import React from "react";
+import { expect, it } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/react";
 import { PersonaDropdown } from "../PersonaDropdown";

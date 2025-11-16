@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { usePersona } from "../PersonaContext";
 
 export type OrderInput = {

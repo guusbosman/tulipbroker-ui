@@ -1,8 +1,8 @@
-import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { defineConfig, type UserConfig } from "vite";
+import type { InlineConfig } from "vitest";
 
-// https://vite.dev/config/
-export default defineConfig({
+const config = {
   plugins: [react()],
   test: {
     environment: "jsdom",
@@ -13,4 +13,7 @@ export default defineConfig({
       reporter: ["text", "html"],
     },
   },
-});
+} satisfies UserConfig & { test: InlineConfig };
+
+// https://vite.dev/config/
+export default defineConfig(config);
