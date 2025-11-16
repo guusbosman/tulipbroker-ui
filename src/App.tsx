@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactElement,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { TulipIcon } from "./components/TulipIcon";
 import { OverviewScreen } from "./screens/OverviewScreen";
 import { PortfolioScreen } from "./screens/PortfolioScreen";
@@ -12,6 +6,7 @@ import { OrdersScreen } from "./screens/OrdersScreen";
 import { MarketDetailScreen } from "./screens/MarketDetailScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { useApiConfig } from "./hooks/useApiConfig";
+import { createNewTradeHandler } from "./utils/createNewTradeHandler.js";
 
 type ScreenKey =
   | "overview"
@@ -20,34 +15,26 @@ type ScreenKey =
   | "market"
   | "settings";
 
-const SCREENS: Record<
-  ScreenKey,
-  { label: string; subtitle: string; render: () => ReactElement }
-> = {
+const SCREEN_METADATA: Record<ScreenKey, { label: string; subtitle: string }> = {
   overview: {
     label: "Overview",
     subtitle: "Market dashboard",
-    render: () => <OverviewScreen />,
   },
   portfolio: {
     label: "Portfolio",
     subtitle: "Holdings & performance",
-    render: () => <PortfolioScreen />,
   },
   orders: {
     label: "Orders",
     subtitle: "Trading console",
-    render: () => <OrdersScreen />,
   },
   market: {
     label: "Market Detail",
     subtitle: "Instrument deep dive",
-    render: () => <MarketDetailScreen />,
   },
   settings: {
     label: "Settings",
     subtitle: "Personalize & learn",
-    render: () => <SettingsScreen />,
   },
 };
 
@@ -111,6 +98,7 @@ function buildBadge(prefix: string, timestamp?: string, fallback?: string) {
 function App() {
   const [activeScreen, setActiveScreen] = useState<ScreenKey>("overview");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [shouldFocusOrders, setShouldFocusOrders] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
@@ -135,7 +123,33 @@ function App() {
       : formatBadgeText(apiBuildBadge ?? uiBuildBadge);
   const combinedBadgeTitle = [apiBuildBadge?.title, uiBuildBadge.title].filter(Boolean).join(" | ") || undefined;
 
-  const ActiveView = useMemo(() => SCREENS[activeScreen].render, [activeScreen]);
+  const screens = useMemo(
+    () => ({
+      overview: {
+        ...SCREEN_METADATA.overview,
+        render: () => <OverviewScreen />,
+      },
+      portfolio: {
+        ...SCREEN_METADATA.portfolio,
+        render: () => <PortfolioScreen />,
+      },
+      orders: {
+        ...SCREEN_METADATA.orders,
+        render: () => <OrdersScreen />,
+      },
+      market: {
+        ...SCREEN_METADATA.market,
+        render: () => <MarketDetailScreen />,
+      },
+      settings: {
+        ...SCREEN_METADATA.settings,
+        render: () => <SettingsScreen />,
+      },
+    }),
+    [],
+  );
+
+  const ActiveView = useMemo(() => screens[activeScreen].render, [activeScreen, screens]);
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -214,6 +228,27 @@ function App() {
     setActiveScreen(key);
     setIsMenuOpen(false);
   };
+
+  useEffect(() => {
+    if (activeScreen !== "orders" || !shouldFocusOrders) {
+      return;
+    }
+
+    const form = document.getElementById("order-entry-form");
+    if (form) {
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+      const priceInput = form.querySelector<HTMLInputElement>("[data-order-price-input]");
+      priceInput?.focus({ preventScroll: true });
+    }
+
+    setShouldFocusOrders(false);
+  }, [activeScreen, shouldFocusOrders]);
+
+  const handleNewTrade = createNewTradeHandler({
+    navigateToOrders: () => setActiveScreen("orders"),
+    closeMenu: () => setIsMenuOpen(false),
+    requestOrdersFocus: () => setShouldFocusOrders(true),
+  });
 
   const baseBadgeClasses =
     "rounded-full border px-4 py-2 text-xs uppercase tracking-[0.35em] transition";
@@ -359,13 +394,15 @@ function App() {
                 <button
                   type="button"
                   className="rounded-2xl border border-tulip-red/60 bg-tulip-red/30 px-4 py-2 font-display text-[0.9rem] uppercase tracking-[0.28em] text-cream transition hover:border-tulip-red hover:bg-tulip-red/40"
+                  onClick={handleNewTrade}
+                  aria-label="Start a new trade and jump to the Orders screen"
                 >
                   New Trade
                 </button>
 
                 <nav className="flex flex-col gap-2" aria-label="Primary">
-                  {(Object.keys(SCREENS) as ScreenKey[]).map((key) => {
-                    const screen = SCREENS[key];
+                  {(Object.keys(SCREEN_METADATA) as ScreenKey[]).map((key) => {
+                    const screen = screens[key];
                     const isActive = key === activeScreen;
                     return (
                       <button
