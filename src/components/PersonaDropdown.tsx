@@ -24,12 +24,23 @@ export function PersonaDropdown({ variant = "default" }: PersonaDropdownProps = 
     "?";
 
   useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      setIsMobile(false);
+      return;
+    }
+
     const media = window.matchMedia("(max-width: 640px)");
     const update = () => setIsMobile(media.matches);
     update();
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setIsMobileMenuOpen(false);
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     if (expanded && selectRef.current) {
@@ -97,7 +108,10 @@ export function PersonaDropdown({ variant = "default" }: PersonaDropdownProps = 
         Active user
       </label>
       {isHeader && (
-        <div className="flex items-center gap-3" title={personaTooltip}>
+        <div
+          className={`flex items-center gap-3 ${isMobile ? "hidden sm:flex" : ""}`}
+          title={personaTooltip}
+        >
           {activePersona.avatarUrl ? (
             <img
               src={activePersona.avatarUrl}
@@ -117,6 +131,9 @@ export function PersonaDropdown({ variant = "default" }: PersonaDropdownProps = 
             <p className="font-display text-sm uppercase tracking-[0.25em] text-cream">
               {activePersona.userName}
             </p>
+            {activePersona.bio ? (
+              <p className="text-[0.85rem] text-cream/75">{activePersona.bio}</p>
+            ) : null}
           </div>
         </div>
       )}
@@ -134,25 +151,40 @@ export function PersonaDropdown({ variant = "default" }: PersonaDropdownProps = 
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
-              className="flex items-center gap-2 rounded-2xl border border-cream/30 bg-navy-900/70 px-3 py-2 text-left text-sm uppercase tracking-[0.18em] text-cream transition hover:border-cream/50 focus:border-cream focus:outline-none"
+              className="relative flex h-12 w-12 items-center justify-center rounded-full border border-cream/30 bg-navy-900/70 text-left transition hover:border-cream/50 focus:border-cream focus:outline-none"
               aria-haspopup="dialog"
               aria-expanded={isMobileMenuOpen}
               aria-controls={`${selectId}-mobile-menu`}
             >
               <span className="sr-only">Choose persona</span>
-              <span className="truncate">{activePersona.userName}</span>
-              <svg
-                aria-hidden="true"
-                className="h-3 w-3 text-cream"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
+              {activePersona.avatarUrl ? (
+                <img
+                  src={activePersona.avatarUrl}
+                  alt=""
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 rounded-full object-cover"
+                  aria-hidden="true"
+                />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-cream/30 text-base font-semibold uppercase tracking-[0.25em] text-cream/80">
+                  {avatarFallback}
+                </div>
+              )}
+              <span className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border border-cream/40 bg-navy-950 text-cream shadow-card">
+                <svg
+                  aria-hidden="true"
+                  className="h-3 w-3"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </span>
             </button>
             {isMobileMenuOpen && (
               <div
