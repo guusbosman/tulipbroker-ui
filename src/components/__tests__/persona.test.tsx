@@ -5,15 +5,15 @@ import { PersonaDropdown } from "../PersonaDropdown";
 import { OrderForm } from "../OrderForm";
 import { OrdersList } from "../OrdersList";
 import { renderWithPersona } from "../../test-utils";
-import { personas } from "../../personas";
+import { seedPersonas } from "../../personas";
 
 it("allows switching personas from the dropdown", async () => {
   renderWithPersona(<PersonaDropdown />);
 
-  expect(screen.getByLabelText(/active user/i)).toHaveValue(personas[0].userId);
-  await userEvent.selectOptions(screen.getByLabelText(/active user/i), personas[1].userId);
+  expect(screen.getByLabelText(/active user/i)).toHaveValue(seedPersonas[0].userId);
+  await userEvent.selectOptions(screen.getByLabelText(/active user/i), seedPersonas[1].userId);
   await waitFor(() => {
-    expect(screen.getByLabelText(/active user/i)).toHaveValue(personas[1].userId);
+    expect(screen.getByLabelText(/active user/i)).toHaveValue(seedPersonas[1].userId);
   });
 });
 
@@ -26,19 +26,19 @@ it("propagates persona selection into the order form submission", async () => {
     </>
   );
 
-  await userEvent.selectOptions(screen.getByLabelText(/active user/i), personas[2].userId);
+  await userEvent.selectOptions(screen.getByLabelText(/active user/i), seedPersonas[2].userId);
   await userEvent.click(screen.getByRole("button", { name: /submit order/i }));
 
-  expect(submitted[0].userId).toBe(personas[2].userId);
+  expect(submitted[0].userId).toBe(seedPersonas[2].userId);
 });
 
 it("shows the submitting persona in the orders list", () => {
   const items = [
     {
       orderId: "abc",
-      userId: personas[0].userId,
-      userName: personas[0].userName,
-      avatarUrl: personas[0].avatarUrl,
+      userId: seedPersonas[0].userId,
+      userName: seedPersonas[0].userName,
+      avatarUrl: seedPersonas[0].avatarUrl,
       side: "BUY",
       price: 10,
       quantity: 2,
@@ -47,6 +47,6 @@ it("shows the submitting persona in the orders list", () => {
 
   renderWithPersona(<OrdersList items={items} />);
 
-  expect(screen.getByText(/submitted by/i)).toHaveTextContent(personas[0].userName);
-  expect(screen.getByAltText(`${personas[0].userName} avatar`)).toBeInTheDocument();
+  expect(screen.getByText(/submitted by/i)).toHaveTextContent(seedPersonas[0].userName);
+  expect(screen.getByAltText(`${seedPersonas[0].userName} avatar`)).toBeInTheDocument();
 });

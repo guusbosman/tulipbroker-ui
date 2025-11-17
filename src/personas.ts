@@ -7,15 +7,15 @@ export type Persona = {
   bio: string;
 };
 
-const registry: Record<string, Persona> = Object.fromEntries(
-  (personaData as Persona[]).map((persona) => [persona.userId, persona])
+export const seedPersonas: Persona[] = personaData as Persona[];
+
+const seedRegistry: Record<string, Persona> = Object.fromEntries(
+  seedPersonas.map((persona) => [persona.userId, persona])
 );
 
-export const personas = Object.values(registry);
-
-export function getPersona(userId?: string): Persona {
+export function getSeedPersona(userId?: string): Persona {
   if (!userId) {
     return { userId: "unknown", userName: "Unknown User", avatarUrl: "", bio: "" };
   }
-  return registry[userId] ?? { userId, userName: "Unknown User", avatarUrl: "", bio: "" };
+  return seedRegistry[userId] ?? { userId, userName: "Unknown User", avatarUrl: "", bio: "" };
 }

@@ -1,4 +1,4 @@
-import { TulipIcon } from "../components/TulipIcon";
+import { UsersPanel } from "../components/UsersPanel";
 import { useApiConfig } from "../hooks/useApiConfig";
 
 export function SettingsScreen() {
@@ -40,16 +40,6 @@ export function SettingsScreen() {
             Tune the experience and browse trading lore.
           </p>
         </header>
-
-        <div className="grid gap-4 rounded-3xl border border-slate-500/30 bg-white/80 px-5 py-5 md:grid-cols-[auto,1fr] md:items-center">
-          <div className="h-20 w-20 rounded-full bg-navy-900/10 flex items-center justify-center">
-            <TulipIcon className="h-12 w-12" />
-          </div>
-          <div>
-            <p className="font-semibold text-lg">Alex Trader</p>
-            <p className="text-sm text-slate-700">Region: EU-West · Multi-AZ</p>
-          </div>
-        </div>
 
         <section className="space-y-3">
           <h3 className="font-display text-lg uppercase tracking-wide">
@@ -93,6 +83,8 @@ export function SettingsScreen() {
             ))}
           </div>
         </section>
+
+        <UsersPanel />
 
         <section className="grid gap-4 md:grid-cols-2">
           {[

@@ -48,6 +48,7 @@ tulipbroker-ui/
 - **Dynamic Config Fetch** — connects to backend `/api/config` to show region and version.
 - **Auto Build + Deploy** — single-step AWS deployment via CloudFormation.
 - **Environment-Aware** — easily deploy multiple environments (`qa`, `prod`, etc.).
+- **Persona Management** — add/edit TulipBroker personas (names, bios, avatars) directly from the UI Settings screen.
 
 ---
 
@@ -114,6 +115,26 @@ VITE_CLIENT_ID=demo-ui
 VITE_UI_BUILD_TIME=2024-02-10T19:45:00Z
 VITE_ENV=qa
 ```
+
+---
+
+## 👥 Persona & Avatar Management
+
+The **Settings → Users** panel (TB-202) lets you create, edit, and delete personas consumed across the UI:
+
+1. Open the Settings screen and scroll to the “Users” section.
+2. Existing personas are listed with avatar, name, and bio. Use **Set active**, **Edit**, or **Remove** actions.
+3. The form at the bottom creates new personas (or edits the selected one). Provide a display name, optional bio, and upload a PNG/JPEG (≤200 KB).
+4. Avatars are resized client-side to 128×128 circular thumbnails before being sent to the backend.
+
+### Generating avatars
+
+- Use AI tools such as DALL·E or Midjourney with prompts like  
+  _“Cartoon portrait of Carolus Clusius holding a tulip bulb, flat pastel background.”_
+- Export from the tool as a square PNG, then upload through the UI (it will handle the crop to 128×128).
+- Seed avatars live in `public/avatars/`. Locally uploaded avatars can be stored in `public/uploads/avatars/` (gitignored) or uploaded to the backend when hooked up to S3.
+
+When the backend personas API is unavailable, the UI falls back to the baked-in seed personas, so the dropdown and order form continue to work.
 
 ---
 

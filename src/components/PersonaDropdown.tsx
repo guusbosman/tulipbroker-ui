@@ -1,5 +1,4 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { personas } from "../personas";
 import { usePersona } from "../PersonaContext";
 
 type PersonaDropdownProps = {
@@ -7,7 +6,7 @@ type PersonaDropdownProps = {
 };
 
 export function PersonaDropdown({ variant = "default" }: PersonaDropdownProps = {}) {
-  const { activePersona, setActivePersona } = usePersona();
+  const { activePersona, setActivePersona, personas } = usePersona();
   const selectId = useId();
   const isHeader = variant === "header";
   const [expanded, setExpanded] = useState(!isHeader);
@@ -99,7 +98,7 @@ export function PersonaDropdown({ variant = "default" }: PersonaDropdownProps = 
           </button>
         );
       }),
-    [activePersona.userId, setActivePersona],
+    [activePersona.userId, personas, setActivePersona],
   );
 
   return (
