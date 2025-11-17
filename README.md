@@ -21,20 +21,19 @@ It’s a lightweight **React + Vite** web application designed for modern, low-l
 
 ```
 tulipbroker-ui/
-├─ public/                     # Static assets
+├─ public/                     # Static assets (seed avatars, favicon, etc.)
 ├─ src/
-│  ├─ components/              # UI components (buttons, panels, tables)
-│  ├─ pages/                   # Page-level React components
+│  ├─ api/                     # REST clients (e.g., personas API)
+│  ├─ components/              # Reusable UI components
 │  ├─ hooks/                   # Custom React hooks
-│  ├─ services/                # API clients and data logic
-│  ├─ styles/                  # CSS or Tailwind files
-│  ├─ App.tsx                  # Main React app entry point
-│  ├─ main.tsx                 # Vite entrypoint
-│  └─ vite-env.d.ts            # TypeScript environment types
-├─ infra/
-│  └─ ui.yaml                  # AWS CloudFormation template (S3 + CloudFront + OAC)
+│  ├─ screens/                 # Top-level views (Orders, Settings, etc.)
+│  ├─ PersonaContext.tsx       # Persona provider used across screens
+│  ├─ App.tsx / main.tsx       # React + Vite entry points
+│  └─ index.css & assets/      # Shared styles/assets
 ├─ scripts/
-│  └─ deploy.sh                # Script to build and deploy to AWS
+│  └─ deploy.sh                # Build + sync to S3 + CloudFront invalidation
+├─ ui-foundation.yaml          # One-time foundation (S3 bucket, CloudFront, ACM)
+├─ ui.yaml                     # Repeatable per-env runtime stack wiring
 ├─ package.json
 ├─ tsconfig.json
 └─ README.md
@@ -58,7 +57,7 @@ tulipbroker-ui/
 
 - AWS CLI configured with valid credentials (`aws configure sso` recommended)
 - Node.js 18+ and npm
-- CloudFormation template (`infra/ui.yaml`) ready
+- CloudFormation templates (`ui-foundation.yaml`, `ui.yaml`) ready
 
 ### 2. Build the UI
 
@@ -69,20 +68,38 @@ npm run build
 
 This creates the optimized production build under `dist/`.
 
-### 3. Deploy via CloudFormation
+### 3. Deploy via CloudFormation (IaC)
+
+*Run once per account/region:* provision the foundation stack (S3 bucket + CloudFront + cert) using `ui-foundation.yaml`.
 
 ```bash
-aws cloudformation deploy   --template-file infra/ui.yaml   --stack-name paperbroker-ui-qa   --parameter-overrides Project=paperbroker-ui Env=qa
+aws cloudformation deploy \
+  --template-file ui-foundation.yaml \
+  --stack-name tulipbroker-ui-foundation \
+  --capabilities CAPABILITY_IAM
 ```
 
-Once completed, note the output value for the **CloudFrontDomain**.
+*Per environment:* deploy or update the runtime stack defined in `ui.yaml` to wire the asset bucket + distribution aliases.
+
+```bash
+aws cloudformation deploy \
+  --template-file ui.yaml \
+  --stack-name tulipbroker-ui-qa \
+  --parameter-overrides AssetBucketName=<bucket> DistributionId=<dist-id>
+```
 
 ### 4. Upload UI Assets
 
+Use the helper script to build, sync to S3, and optionally invalidate CloudFront:
+
 ```bash
-aws s3 sync dist/ s3://paperbroker-ui-qa-assets --delete
-aws cloudfront create-invalidation --distribution-id <YOUR_DISTRIBUTION_ID> --paths "/*"
+./scripts/deploy.sh \
+  STACK_NAME=tulipbroker-ui-qa \
+  ASSET_BUCKET=<bucket-from-foundation> \
+  DISTRIBUTION_ID=<dist-id>
 ```
+
+The script runs `npm run build`, stamps `VITE_UI_BUILD_TIME`, copies `dist/` to the bucket, and submits an invalidation when a distribution ID is supplied.
 
 ### 5. Test Access
 
@@ -100,20 +117,16 @@ When building locally, the following environment variables can be set in a `.env
 
 | Variable | Example | Description |
 |-----------|----------|-------------|
-| `VITE_API_URL` | `https://abc123.execute-api.us-east-2.amazonaws.com` | Backend API base URL |
-| `VITE_APP_VERSION` | `0.1.0` | UI version displayed in footer |
-| `VITE_UI_BUILD_TIME` | `2024-02-10T19:45:00Z` | Optional UTC stamp injected at build; auto-set by `scripts/deploy.sh` |
-| `VITE_CLIENT_ID` | `demo-ui` | Client identifier included on order submits |
-| `VITE_ENV` | `qa` | Environment identifier (qa, prod, etc.) |
+| `VITE_API_URL` | `https://abc123.execute-api.us-east-2.amazonaws.com` | Backend API base URL used by orders/config/personas hooks. |
+| `VITE_UI_BUILD_TIME` | `2024-02-10T19:45:00Z` | UTC timestamp surfaced on the Settings screen (auto-set by `scripts/deploy.sh`). |
+| `VITE_CLIENT_ID` | `demo-ui` | Client identifier included when submitting orders. |
 
 Example `.env.qa` file:
 
 ```
 VITE_API_URL=https://abc123.execute-api.us-east-2.amazonaws.com
-VITE_APP_VERSION=0.1.0
 VITE_CLIENT_ID=demo-ui
 VITE_UI_BUILD_TIME=2024-02-10T19:45:00Z
-VITE_ENV=qa
 ```
 
 ---
