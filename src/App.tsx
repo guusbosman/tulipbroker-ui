@@ -311,7 +311,7 @@ function App() {
                   </p>
                 </div>
               </button>
-              <div className="flex min-w-[13rem] justify-end">
+              <div className="flex min-w-[3rem] justify-end sm:min-w-[13rem]">
                 <PersonaDropdown variant="header" />
               </div>
             </div>
