@@ -48,8 +48,38 @@ tulipbroker-ui/
 - **Auto Build + Deploy** — single-step AWS deployment via CloudFormation.
 - **Environment-Aware** — easily deploy multiple environments (`qa`, `prod`, etc.).
 - **Persona Management** — add/edit TulipBroker personas (names, bios, avatars) directly from the UI Settings screen.
+- **Orders Backend Toggle** — switch the orders data source (DynamoDB vs Yugabyte) from the Admin settings panel.
 
 ---
+
+## 🗺️ AWS + GCP Dependencies (Visual)
+
+```mermaid
+flowchart LR
+  subgraph AWS["AWS (us-east-2)"]
+    UI["TulipBroker UI (S3 + CloudFront)"]
+    API["API Gateway (HTTP API)"]
+    L["Lambda (Python 3.12)"]
+    DDB["DynamoDB (orders/personas)"]
+    SQS["SQS FIFO (order events)"]
+  end
+
+  subgraph GCP["GCP (us-east5)"]
+    LB["TCP LB :5433"]
+    YB1["YugabyteDB node1"]
+    YB2["YugabyteDB node2"]
+    YB3["YugabyteDB node3"]
+  end
+
+  UI --> API
+  API --> L
+  L --> DDB
+  L --> SQS
+  L --> LB
+  LB --> YB1
+  LB --> YB2
+  LB --> YB3
+```
 
 ## ⚙️ Deployment Steps
 
@@ -131,6 +161,11 @@ VITE_UI_BUILD_TIME=2024-02-10T19:45:00Z
 
 ---
 
+## 🧩 Orders Backend Toggle
+
+The Admin settings panel lets you switch which database powers the Orders screen and the market pulse chart.  
+The selection is stored in `localStorage`, so it persists across refreshes and browser restarts.
+
 ## 👥 Persona & Avatar Management
 
 The **Settings → Users** panel (TB-202) lets you create, edit, and delete personas consumed across the UI:
@@ -156,8 +191,8 @@ When the backend personas API is unavailable, the UI falls back to the baked-in 
 To remove all QA infrastructure:
 
 ```bash
-aws cloudformation delete-stack --stack-name paperbroker-ui-qa
-aws s3 rb s3://paperbroker-ui-qa-assets --force
+aws cloudformation delete-stack --stack-name tulipbroker-ui-qa
+aws s3 rb s3://tulipbroker-ui-qa-assets --force
 ```
 
 ---
