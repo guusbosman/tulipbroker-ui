@@ -18,7 +18,7 @@ const API_BASE =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
 const ENDPOINT = API_BASE ? `${API_BASE}/api/metrics/pulse` : "/api/metrics/pulse";
 
-export function useMarketPulse() {
+export function useMarketPulse(backend: "dynamodb" | "yugabyte") {
   const [points, setPoints] = useState<PulsePoint[]>([]);
   const [stats, setStats] = useState<PulseStats | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "ready">(
@@ -30,7 +30,7 @@ export function useMarketPulse() {
     try {
       setStatus("loading");
       setError(null);
-      const response = await fetch(ENDPOINT);
+      const response = await fetch(`${ENDPOINT}?backend=${backend}`);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
@@ -46,10 +46,13 @@ export function useMarketPulse() {
   };
 
   useEffect(() => {
+    setPoints([]);
+    setStats(null);
+    setError(null);
     fetchPulse();
     const interval = setInterval(fetchPulse, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [backend]);
 
   const sentiment = useMemo(() => {
     if (!stats) {

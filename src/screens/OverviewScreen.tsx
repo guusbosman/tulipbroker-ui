@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { TulipIcon } from "../components/TulipIcon";
 import { useMarketPulse } from "../hooks/useMarketPulse";
+import { useOrdersBackend } from "../OrdersBackendContext";
 
 const TOOLTIP_FORMATTER = new Intl.DateTimeFormat("en-US", {
   timeZone: "America/New_York",
@@ -42,7 +43,8 @@ const HERO_TULIPS = [
 ];
 
 export function OverviewScreen() {
-  const { points, stats, status, error, sentiment, refresh } = useMarketPulse();
+  const { backend } = useOrdersBackend();
+  const { points, stats, status, error, sentiment, refresh } = useMarketPulse(backend);
   const chartData = (points.length ? points : DEFAULT_POINTS).map((point, idx) => ({
     ...point,
     label: TOOLTIP_FORMATTER.format(new Date(point.ts)),

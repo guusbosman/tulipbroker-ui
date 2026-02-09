@@ -1,8 +1,10 @@
 import { UsersPanel } from "../components/UsersPanel";
 import { useApiConfig } from "../hooks/useApiConfig";
+import { useOrdersBackend } from "../OrdersBackendContext";
 
 export function SettingsScreen() {
   const { config: apiConfig, status: apiStatus, error: apiError } = useApiConfig();
+  const { backend, setBackend } = useOrdersBackend();
   const uiBuildTime =
     import.meta.env.VITE_UI_BUILD_TIME ??
     (import.meta.env.DEV ? new Date().toISOString() : undefined);
@@ -143,6 +145,28 @@ export function SettingsScreen() {
               {apiError}
             </p>
           )}
+          <div className="flex flex-col gap-2 rounded-2xl bg-white/60 px-4 py-3">
+            <span className="text-xs uppercase tracking-[0.25em] text-slate-500">
+              Orders backend
+            </span>
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                className="rounded-full border border-slate-400/60 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-navy-800 shadow-inner"
+                value={backend}
+                onChange={(event) =>
+                  setBackend(event.target.value as "dynamodb" | "yugabyte")
+                }
+              >
+                <option value="dynamodb">DynamoDB</option>
+                <option value="yugabyte">Yugabyte (stub)</option>
+              </select>
+              {backend === "yugabyte" && (
+                <span className="text-[0.65rem] uppercase tracking-[0.3em] text-tulip-red">
+                  Not implemented
+                </span>
+              )}
+            </div>
+          </div>
           <div className="grid gap-2 text-sm text-slate-700">
             {configRows.map((row) => (
               <div

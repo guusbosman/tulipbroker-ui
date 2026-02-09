@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { usePersona } from "../PersonaContext";
+import { useOrdersBackend } from "../OrdersBackendContext";
 
 type Order = {
   orderId: string;
@@ -59,6 +60,7 @@ const formatProcessingDuration = (value?: number) => {
 
 export function OrdersScreen() {
   const { activePersona } = usePersona();
+  const { backend } = useOrdersBackend();
   const [side, setSide] = useState<"BUY" | "SELL">("BUY");
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -72,7 +74,9 @@ export function OrdersScreen() {
     try {
       setLoadingOrders(true);
       setOrdersError(null);
-      const response = await fetch(`${orderEndpoint}?limit=20`);
+      const response = await fetch(
+        `${orderEndpoint}?limit=20&backend=${backend}`,
+      );
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
@@ -110,7 +114,7 @@ export function OrdersScreen() {
         timeInForce: "GTC",
       };
 
-      const response = await fetch(orderEndpoint, {
+      const response = await fetch(`${orderEndpoint}?backend=${backend}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -145,8 +149,10 @@ export function OrdersScreen() {
   };
 
   useEffect(() => {
+    setOrders([]);
+    setOrdersError(null);
     loadOrders();
-  }, []);
+  }, [backend]);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr] h-full">
@@ -259,41 +265,42 @@ export function OrdersScreen() {
                   No orders yet
                 </div>
               )}
-              {orders.map((order) => (
-                <div key={order.orderId} className="px-4 py-3">
-                  <div className="grid grid-cols-[1.4fr_repeat(4,minmax(0,1fr))] gap-2 items-center">
-                    <span
-                      className="font-semibold whitespace-nowrap"
-                      title={order.acceptedAt ?? ""}
-                    >
-                      {formatEst(order.acceptedAt)}
-                    </span>
-                    <span
-                      className={`font-semibold text-center ${
-                        order.side === "BUY" ? "text-tulip-green" : "text-tulip-red"
-                      }`}
-                    >
-                      {order.side}
-                    </span>
-                    <span>{order.quantity}</span>
-                    <span>${order.price.toFixed(2)}</span>
-                    <span className="flex items-center gap-2">
-                      <span>{order.status ?? "ACCEPTED"}</span>
-                    </span>
+              {!ordersError &&
+                orders.map((order) => (
+                  <div key={order.orderId} className="px-4 py-3">
+                    <div className="grid grid-cols-[1.4fr_repeat(4,minmax(0,1fr))] gap-2 items-center">
+                      <span
+                        className="font-semibold whitespace-nowrap"
+                        title={order.acceptedAt ?? ""}
+                      >
+                        {formatEst(order.acceptedAt)}
+                      </span>
+                      <span
+                        className={`font-semibold text-center ${
+                          order.side === "BUY" ? "text-tulip-green" : "text-tulip-red"
+                        }`}
+                      >
+                        {order.side}
+                      </span>
+                      <span>{order.quantity}</span>
+                      <span>${order.price.toFixed(2)}</span>
+                      <span className="flex items-center gap-2">
+                        <span>{order.status ?? "ACCEPTED"}</span>
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-500">
+                      <span title={order.orderId} className="truncate max-w-[60%]">
+                        ID: {order.orderId.split("-")[0]}
+                      </span>
+                      <span className="hidden sm:inline" title={`Region ${order.region ?? "?"}`}>
+                        Region {order.region ?? "?"}
+                      </span>
+                      <span className="font-semibold text-navy-800 tracking-[0.15em]" title="Order processing duration">
+                        Proc {formatProcessingDuration(order.processingMs)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-500">
-                    <span title={order.orderId} className="truncate max-w-[60%]">
-                      ID: {order.orderId.split("-")[0]}
-                    </span>
-                    <span className="hidden sm:inline" title={`Region ${order.region ?? "?"}`}>
-                      Region {order.region ?? "?"}
-                    </span>
-                    <span className="font-semibold text-navy-800 tracking-[0.15em]" title="Order processing duration">
-                      Proc {formatProcessingDuration(order.processingMs)}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         </div>

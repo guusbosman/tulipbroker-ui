@@ -8,6 +8,7 @@ import { MarketDetailScreen } from "./screens/MarketDetailScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { useApiConfig } from "./hooks/useApiConfig";
 import { createNewTradeHandler } from "./utils/createNewTradeHandler.js";
+import { OrdersBackendProvider, useOrdersBackend } from "./OrdersBackendContext";
 
 type ScreenKey =
   | "overview"
@@ -96,7 +97,8 @@ function buildBadge(prefix: string, timestamp?: string, fallback?: string) {
   };
 }
 
-function App() {
+function AppLayout() {
+  const { backend } = useOrdersBackend();
   const [activeScreen, setActiveScreen] = useState<ScreenKey>("overview");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [shouldFocusOrders, setShouldFocusOrders] = useState(false);
@@ -123,6 +125,7 @@ function App() {
       ? `${formatBadgeText(apiBuildBadge)} // ${formatBadgeText(uiBuildBadge)}`
       : formatBadgeText(apiBuildBadge ?? uiBuildBadge);
   const combinedBadgeTitle = [apiBuildBadge?.title, uiBuildBadge.title].filter(Boolean).join(" | ") || undefined;
+  const ordersBackendLabel = backend === "yugabyte" ? "Yugabyte (stub)" : "DynamoDB";
 
   const screens = useMemo(
     () => ({
@@ -327,6 +330,9 @@ function App() {
               <span className={`${apiBadgeClasses} w-full sm:w-auto`} aria-live="polite">
                 {apiBadgeText}
               </span>
+              <span className="w-full rounded-full border border-cream/25 px-4 py-2 text-[0.65rem] uppercase tracking-[0.25em] text-cream/80 sm:w-auto">
+                Orders DB: {ordersBackendLabel}
+              </span>
               <span
                 className="w-full rounded-full border border-cream/25 px-4 py-2 text-[0.65rem] uppercase tracking-[0.25em] text-cream/80 sm:w-auto"
                 title={combinedBadgeTitle}
@@ -433,6 +439,14 @@ function App() {
         </div>
       )}
     </>
+  );
+}
+
+function App() {
+  return (
+    <OrdersBackendProvider>
+      <AppLayout />
+    </OrdersBackendProvider>
   );
 }
 
